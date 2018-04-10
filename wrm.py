@@ -35,4 +35,7 @@ args = parser.parse_args()
 CFG = importlib.import_module('config.' + args.config)
 
 if __name__ == "__main__":
-    print(CFG.WP1_ADDRESS)
+
+    wp2 = WordpressJsonWrapper(CFG.WP2_ADDRESS, CFG.WP2_USER_NAME, CFG.WP2_PASSWORD)
+    posts = wp2.get_posts()
+    # posts[0].keys()
