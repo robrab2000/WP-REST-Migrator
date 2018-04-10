@@ -14,25 +14,26 @@ this program. If not, see <http://www.gnu.org/licenses/>.
 
 Copyright 2018, Robert J Homewood
 """
-__author__ = "Robert J Homewood"
-__contact__ = "rob.homewood@googlemail.com"
-__copyright__ = "Copyright 2018, Robert J Homewood"
-__credits__ = ["Robert J Homewood"]
-__date__ = "2018/01/08"
-__deprecated__ = False
-__email__ =  "rob.homewood@googlemail.com"
-__license__ = "GPLv3"
-__maintainer__ = "Robert J Homewood"
-__version__ = "0.0.1"
 
-import argparse, importlib, os, sys
-from wordpress_json import WordpressJsonWrapper
+## WP1 : Wordpress address being exported from
+## WP2 : Wordpress address being exported to
 
-parser = argparse.ArgumentParser(description='Minecraft Resource Pack Picker.')
-parser.add_argument('--config', dest='config', default='default-config', help='specify config library')
-args = parser.parse_args()
+## WP1 Config details
 
-CFG = importlib.import_module('config.' + args.config)
+# Site address
+WP1_ADDRESS = "https://"
+# User name
+WP1_USER_NAME = ""
+# Password
+WP1_PASSWORD = ""
 
-if __name__ == "__main__":
-    print(CFG.WP1_ADDRESS)
+
+## WP2 Config details
+
+# Site address
+WP2_ADDRESS = "https://"
+# User name
+WP2_USER_NAME = ""
+# Password
+WP2_PASSWORD = ""
+
