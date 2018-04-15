@@ -26,7 +26,7 @@ __maintainer__ = "Robert J Homewood"
 __version__ = "0.0.1"
 
 import argparse, importlib, os, sys
-from wordpress_json import WordpressJsonWrapper
+from wordpress import API
 
 parser = argparse.ArgumentParser(description='Minecraft Resource Pack Picker.')
 parser.add_argument('--config', dest='config', default='default-config', help='specify config library')
@@ -34,8 +34,33 @@ args = parser.parse_args()
 
 CFG = importlib.import_module('config.' + args.config)
 
+wpapi1 = API(
+    url=CFG.WP1_ADDRESS,
+    consumer_key=CFG.WP1_KEY,
+    consumer_secret=CFG.WP1_SECRET,
+    api="wp-json",
+    version="wp/v2",
+    wp_user=CFG.WP1_USER_NAME,
+    wp_pass=CFG.WP1_PASSWORD,
+    oauth1a_3leg=True,
+    creds_store="~/.wc-api-creds.json",
+    callback=CFG.WP1_ADDRESS + '/oauth1_callback'
+)
+wpapi2 = API(
+    url=CFG.WP2_ADDRESS,
+    consumer_key=CFG.WP2_KEY,
+    consumer_secret=CFG.WP2_SECRET,
+    api="wp-json",
+    version="wp/v2",
+    wp_user=CFG.WP2_USER_NAME,
+    wp_pass=CFG.WP2_PASSWORD,
+    basic_auth = True,
+    user_auth = True
+)
+
 if __name__ == "__main__":
 
-    wp2 = WordpressJsonWrapper(CFG.WP2_ADDRESS, CFG.WP2_USER_NAME, CFG.WP2_PASSWORD)
-    posts = wp2.get_posts()
-    # posts[0].keys()
+    posts = wpapi2.get("posts")
+    for post in posts.json():
+        print(post)
+    # print(posts.json())

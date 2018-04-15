@@ -26,6 +26,10 @@ WP1_ADDRESS = "https://"
 WP1_USER_NAME = ""
 # Password
 WP1_PASSWORD = ""
+# Consumer key
+WP1_KEY = ""
+# Consumer secret
+WP1_SECRET = ""
 
 
 ## WP2 Config details
@@ -36,4 +40,7 @@ WP2_ADDRESS = "https://"
 WP2_USER_NAME = ""
 # Password
 WP2_PASSWORD = ""
-
+# Consumer key
+WP2_KEY = ""
+# Consumer secret
+WP2_SECRET = ""
