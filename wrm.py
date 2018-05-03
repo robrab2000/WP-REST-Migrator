@@ -25,8 +25,9 @@ __license__ = "GPLv3"
 __maintainer__ = "Robert J Homewood"
 __version__ = "0.0.1"
 
-import argparse, importlib, os, sys
+import argparse, importlib, os, sys, json
 from wordpress import API
+from bs4 import BeautifulSoup
 
 parser = argparse.ArgumentParser(description='Minecraft Resource Pack Picker.')
 parser.add_argument('--config', dest='config', default='default-config', help='specify config library')
@@ -58,9 +59,94 @@ wpapi2 = API(
     user_auth = True
 )
 
+
+
+def get_posts():
+    """function to gather the posts from  wp1"""
+    posts = wpapi2.get("posts")
+    return posts
+
+def handle_posts(posts):
+    """function to handle the list of posts"""
+    for post in posts.json():
+        for k, v in post.items():
+            if k == 'content':
+                handle_post_content(v)
+            elif k == 'author':
+                handle_post_author(v)
+            elif k == 'featured_media':
+                handle_post_featured_media(v)
+            elif k == 'categories':
+                handle_post_categories(v)
+            elif k == 'tags':
+                handle_post_tags(v)
+        break
+
+def handle_post_content(content):
+    """function to handle the content of a post"""
+    print("V1", type(content), content)
+    soup = BeautifulSoup(content['rendered'], "html.parser")  # , from_encoding="iso-8859-1")
+    imgs = soup.findAll('img')
+    for img in imgs:
+        img_link = str(img).split('src="')[1].split('"')[0]
+        if img_link in str(content):
+            content = handle_image(img_link, content)
+    print("V2", type(content), content)
+
+def handle_image(image_link, content):
+    """function to handle an image"""
+    content['rendered'] = content['rendered'].replace(image_link, "NULL_GOES_HERE")
+    return content
+
+
+def handle_post_author(author):
+    """function to handle the author of a post"""
+    print("author:", author)
+    pass
+
+def handle_post_featured_media(featured_media):
+    """function to handle the featured_media of a post"""
+    print("featured media:", featured_media)
+    pass
+
+def handle_post_categories(categories):
+    """function to handle the categories of a post"""
+    print("categories:", categories)
+    pass
+
+def handle_post_tags(tags):
+    """function to handle the tags of a post"""
+    print("tags:", tags)
+    pass
+
 if __name__ == "__main__":
 
-    posts = wpapi2.get("posts")
-    for post in posts.json():
-        print(post)
-    # print(posts.json())
+    posts = get_posts()
+    handle_posts(posts)
+
+
+## composition of post json
+# id
+# date
+# date_gmt
+# guid
+# modified
+# modified_gmt
+# slug
+# status
+# type
+# link
+# title
+# content *
+# excerpt
+# author *
+# featured_media *
+# comment_status
+# ping_status
+# sticky
+# template
+# format
+# meta
+# categories *
+# tags *
+# _links
