@@ -84,14 +84,14 @@ def handle_posts(posts):
 
 def handle_post_content(content):
     """function to handle the content of a post"""
-    print("V1", type(content), content)
+    # print("V1", type(content), content)
     soup = BeautifulSoup(content['rendered'], "html.parser")  # , from_encoding="iso-8859-1")
     imgs = soup.findAll('img')
     for img in imgs:
         img_link = str(img).split('src="')[1].split('"')[0]
         if img_link in str(content):
             content = handle_image(img_link, content)
-    print("V2", type(content), content)
+    # print("V2", type(content), content)
 
 def handle_image(image_link, content):
     """function to handle an image"""
@@ -101,22 +101,38 @@ def handle_image(image_link, content):
 
 def handle_post_author(author):
     """function to handle the author of a post"""
-    print("author:", author)
+    # print("author:", author)
+    # users = wpapi2.get("user")
+    # user_json = json.loads(users.text)
+    # for user in user_json:
+    #     print(user)
+
     pass
 
 def handle_post_featured_media(featured_media):
     """function to handle the featured_media of a post"""
-    print("featured media:", featured_media)
+    # print("featured media:", featured_media)
+
     pass
 
 def handle_post_categories(categories):
     """function to handle the categories of a post"""
-    print("categories:", categories)
+    # print("categories:", categories)
+    # categories =
     pass
 
 def handle_post_tags(tags):
     """function to handle the tags of a post"""
-    print("tags:", tags)
+    # print("tags:", tags)
+    tags_object = wpapi2.get("tags")
+    # for user in users.text:
+    #     print(user)
+    tags = json.loads(tags_object.text)
+    for tag in tags:
+        tag_data = wpapi2.get("tags", id=tag['id'])
+        print(tag_data) # TRY CLONING THE API REPO AND THEN EDITING IT TO ADD MY OWN KWARGS MAYBE?
+        # print(tag)
+        pass
     pass
 
 if __name__ == "__main__":
