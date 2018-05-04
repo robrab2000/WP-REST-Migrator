@@ -36,16 +36,26 @@ args = parser.parse_args()
 CFG = importlib.import_module('config.' + args.config)
 
 wpapi1 = API(
-    url=CFG.WP1_ADDRESS,
-    consumer_key=CFG.WP1_KEY,
-    consumer_secret=CFG.WP1_SECRET,
+    # url=CFG.WP1_ADDRESS,
+    # consumer_key=CFG.WP1_KEY,
+    # consumer_secret=CFG.WP1_SECRET,
+    # api="wp-json",
+    # version="wp/v2",
+    # wp_user=CFG.WP1_USER_NAME,
+    # wp_pass=CFG.WP1_PASSWORD,
+    # oauth1a_3leg=True,
+    # creds_store="~/.wc-api-creds.json",
+    # callback=CFG.WP1_ADDRESS + '/oauth1_callback'
+    url=CFG.WP2_ADDRESS,
+    consumer_key=CFG.WP2_KEY,
+    consumer_secret=CFG.WP2_SECRET,
     api="wp-json",
     version="wp/v2",
-    wp_user=CFG.WP1_USER_NAME,
-    wp_pass=CFG.WP1_PASSWORD,
+    wp_user=CFG.WP2_USER_NAME,
+    wp_pass=CFG.WP2_PASSWORD,
     oauth1a_3leg=True,
     creds_store="~/.wc-api-creds.json",
-    callback=CFG.WP1_ADDRESS + '/oauth1_callback'
+    callback=CFG.WP1_ADDRESS + '/index.php'#/oauth1_callback'
 )
 wpapi2 = API(
     url=CFG.WP2_ADDRESS,
@@ -80,6 +90,7 @@ def handle_posts(posts):
                 handle_post_categories(v)
             elif k == 'tags':
                 handle_post_tags(v)
+            # print(k, v)
         break
 
 def handle_post_content(content):
@@ -102,10 +113,12 @@ def handle_image(image_link, content):
 def handle_post_author(author):
     """function to handle the author of a post"""
     # print("author:", author)
-    # users = wpapi2.get("user")
-    # user_json = json.loads(users.text)
-    # for user in user_json:
-    #     print(user)
+    # user_id = "user/" + str(author)
+    # print(user_id)
+    users = wpapi1.get('users')
+    user_json = json.loads(users.json())
+    for user in user_json:
+        print(user)
 
     pass
 
@@ -129,8 +142,8 @@ def handle_post_tags(tags):
     #     print(user)
     tags = json.loads(tags_object.text)
     for tag in tags:
-        tag_data = wpapi2.get("tags", id=tag['id'])
-        print(tag_data) # TRY CLONING THE API REPO AND THEN EDITING IT TO ADD MY OWN KWARGS MAYBE?
+        # tag_data = wpapi2.get("tags", id=tag['id'])
+        # print(tag_data) # TRY CLONING THE API REPO AND THEN EDITING IT TO ADD MY OWN KWARGS MAYBE?
         # print(tag)
         pass
     pass
