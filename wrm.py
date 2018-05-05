@@ -55,7 +55,7 @@ wpapi1 = API(
     wp_pass=CFG.WP2_PASSWORD,
     oauth1a_3leg=True,
     creds_store="~/.wc-api-creds.json",
-    callback=CFG.WP1_ADDRESS + '/index.php'#/oauth1_callback'
+    callback=CFG.WP2_ADDRESS + '/success.html' # REMEMBER TO DISABLE reCAPCHA
 )
 wpapi2 = API(
     url=CFG.WP2_ADDRESS,
@@ -69,29 +69,61 @@ wpapi2 = API(
     user_auth = True
 )
 
+# site 1 data storage. these should all be in json dict format
+post_data = []
+author_data = []
+media_data = []
+category_data = []
+tag_data = []
 
-
-def get_posts():
+def get_post_data():
     """function to gather the posts from  wp1"""
-    posts = wpapi2.get("posts")
-    return posts
-
-def handle_posts(posts):
-    """function to handle the list of posts"""
+    posts = wpapi1.get("posts")
     for post in posts.json():
-        for k, v in post.items():
-            if k == 'content':
-                handle_post_content(v)
-            elif k == 'author':
-                handle_post_author(v)
-            elif k == 'featured_media':
-                handle_post_featured_media(v)
-            elif k == 'categories':
-                handle_post_categories(v)
-            elif k == 'tags':
-                handle_post_tags(v)
-            # print(k, v)
-        break
+        post_json_dump = json.dumps(post)
+        post_json = json.loads(post_json_dump)
+        post_data.append(post_json)
+
+def get_author_data():
+    """function to gather the authors from  wp1"""
+    users = wpapi1.get('users')
+    for user in users.json():
+        user_json_dump = json.dumps(user)
+        user_json = json.loads(user_json_dump)
+        author_data.append(user_json)
+
+def get_category_data():
+    """function to gather the authors from  wp1"""
+    categories = wpapi1.get('categories')
+    for category in categories.json():
+        category_json_dump = json.dumps(category)
+        category_json = json.loads(category_json_dump)
+        category_data.append(category_json)
+
+def get_tag_data():
+    """function to gather the authors from  wp1"""
+    tags = wpapi1.get('tags')
+    for tag in tags.json():
+        tag_json_dump = json.dumps(tag)
+        tag_json = json.loads(tag_json_dump)
+        tag_data.append(tag_json)
+
+def get_wp1_data():
+    """funtion to gather the various data from wp1"""
+    get_post_data()
+    get_author_data()
+    get_category_data()
+    get_tag_data()
+
+def handle_posts():
+    """function to handle the list of posts"""
+
+    for post in post_data:
+        handle_post_content(post['content'])
+        handle_post_author(post['author'])
+        # handle_post_featured_media(post['featured_media'])
+        handle_post_categories(post['categories'])
+        handle_post_tags(post['tags'])
 
 def handle_post_content(content):
     """function to handle the content of a post"""
@@ -112,15 +144,9 @@ def handle_image(image_link, content):
 
 def handle_post_author(author):
     """function to handle the author of a post"""
-    # print("author:", author)
-    # user_id = "user/" + str(author)
-    # print(user_id)
-    users = wpapi1.get('users')
-    user_json = json.loads(users.json())
-    for user in user_json:
-        print(user)
-
-    pass
+    for author in author_data:
+        # print(author)
+        pass
 
 def handle_post_featured_media(featured_media):
     """function to handle the featured_media of a post"""
@@ -130,28 +156,20 @@ def handle_post_featured_media(featured_media):
 
 def handle_post_categories(categories):
     """function to handle the categories of a post"""
-    # print("categories:", categories)
-    # categories =
-    pass
+    for category in category_data:
+        # print(category)
+        pass
 
 def handle_post_tags(tags):
     """function to handle the tags of a post"""
-    # print("tags:", tags)
-    tags_object = wpapi2.get("tags")
-    # for user in users.text:
-    #     print(user)
-    tags = json.loads(tags_object.text)
-    for tag in tags:
-        # tag_data = wpapi2.get("tags", id=tag['id'])
-        # print(tag_data) # TRY CLONING THE API REPO AND THEN EDITING IT TO ADD MY OWN KWARGS MAYBE?
+    for tag in tag_data:
         # print(tag)
         pass
-    pass
 
 if __name__ == "__main__":
-
-    posts = get_posts()
-    handle_posts(posts)
+    """main function to run the program"""
+    get_wp1_data()
+    handle_posts()
 
 
 ## composition of post json
