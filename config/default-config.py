@@ -15,6 +15,9 @@ this program. If not, see <http://www.gnu.org/licenses/>.
 Copyright 2018, Robert J Homewood
 """
 
+# Entries to scrape per page
+ENTRIES_PER_PAGE = 100
+
 ## WP1 : Wordpress address being exported from
 ## WP2 : Wordpress address being exported to
 

@@ -78,10 +78,10 @@ tag_data = []
 
 def get_post_data():
     """function to gather the posts from  wp1"""
-    pages = wpapi1.get("posts?per_page=100").headers['X-WP-TotalPages']
+    pages = wpapi1.get("posts?per_page=" + str(CFG.ENTRIES_PER_PAGE)).headers['X-WP-TotalPages']
     for page in range(1, int(pages) + 1):
-        print("attempting to gather (100) posts from page", page)
-        posts = wpapi1.get("posts?per_page=100&page=" + str(page))
+        print("attempting to gather (" + str(CFG.ENTRIES_PER_PAGE) + ") posts from page (" + str(page) + "/" + str(pages) + ")")
+        posts = wpapi1.get("posts?per_page=" + str(CFG.ENTRIES_PER_PAGE) + "&page=" + str(page))
         for post in posts.json():
             post_json_dump = json.dumps(post)
             post_json = json.loads(post_json_dump)
@@ -89,11 +89,14 @@ def get_post_data():
 
 def get_author_data():
     """function to gather the authors from  wp1"""
-    users = wpapi1.get('users')
-    for user in users.json():
-        user_json_dump = json.dumps(user)
-        user_json = json.loads(user_json_dump)
-        author_data.append(user_json)
+    pages = wpapi1.get("users?per_page=" + str(CFG.ENTRIES_PER_PAGE)).headers['X-WP-TotalPages']
+    for page in range(1, int(pages) + 1):
+        print("attempting to gather (" + str(CFG.ENTRIES_PER_PAGE) + ") users from page (" + str(page) + "/" + str(pages) + ")")
+        users = wpapi1.get("users?per_page=" + str(CFG.ENTRIES_PER_PAGE) + "&page=" + str(page))
+        for user in users.json():
+            user_json_dump = json.dumps(user)
+            user_json = json.loads(user_json_dump)
+            author_data.append(user_json)
 
 def get_category_data():
     """function to gather the authors from  wp1"""
