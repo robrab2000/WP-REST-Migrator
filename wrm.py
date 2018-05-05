@@ -78,11 +78,14 @@ tag_data = []
 
 def get_post_data():
     """function to gather the posts from  wp1"""
-    posts = wpapi1.get("posts")
-    for post in posts.json():
-        post_json_dump = json.dumps(post)
-        post_json = json.loads(post_json_dump)
-        post_data.append(post_json)
+    pages = wpapi1.get("posts?per_page=100").headers['X-WP-TotalPages']
+    for page in range(1, int(pages) + 1):
+        print("attempting to gather (100) posts from page", page)
+        posts = wpapi1.get("posts?per_page=100&page=" + str(page))
+        for post in posts.json():
+            post_json_dump = json.dumps(post)
+            post_json = json.loads(post_json_dump)
+            post_data.append(post_json)
 
 def get_author_data():
     """function to gather the authors from  wp1"""
@@ -121,9 +124,10 @@ def handle_posts():
     for post in post_data:
         handle_post_content(post['content'])
         handle_post_author(post['author'])
-        # handle_post_featured_media(post['featured_media'])
+        handle_post_featured_media(post['featured_media'])
         handle_post_categories(post['categories'])
         handle_post_tags(post['tags'])
+    # print(len(post_data))
 
 def handle_post_content(content):
     """function to handle the content of a post"""
@@ -142,25 +146,25 @@ def handle_image(image_link, content):
     return content
 
 
-def handle_post_author(author):
+def handle_post_author(author_id):
     """function to handle the author of a post"""
     for author in author_data:
         # print(author)
         pass
 
-def handle_post_featured_media(featured_media):
+def handle_post_featured_media(featured_media_id):
     """function to handle the featured_media of a post"""
     # print("featured media:", featured_media)
 
     pass
 
-def handle_post_categories(categories):
+def handle_post_categories(categories_ids):
     """function to handle the categories of a post"""
     for category in category_data:
         # print(category)
         pass
 
-def handle_post_tags(tags):
+def handle_post_tags(tag_ids):
     """function to handle the tags of a post"""
     for tag in tag_data:
         # print(tag)
@@ -170,6 +174,7 @@ if __name__ == "__main__":
     """main function to run the program"""
     get_wp1_data()
     handle_posts()
+    print(len(post_data))
 
 
 ## composition of post json
