@@ -100,19 +100,26 @@ def get_author_data():
 
 def get_category_data():
     """function to gather the authors from  wp1"""
-    categories = wpapi1.get('categories')
-    for category in categories.json():
-        category_json_dump = json.dumps(category)
-        category_json = json.loads(category_json_dump)
-        category_data.append(category_json)
+    pages = wpapi1.get("categories?per_page=" + str(CFG.ENTRIES_PER_PAGE)).headers['X-WP-TotalPages']
+    for page in range(1, int(pages) + 1):
+        print("attempting to gather (" + str(CFG.ENTRIES_PER_PAGE) + ") categories from page (" + str(page) + "/" + str(pages) + ")")
+        categories = wpapi1.get("categories?per_page=" + str(CFG.ENTRIES_PER_PAGE) + "&page=" + str(page))
+        for category in categories.json():
+            category_json_dump = json.dumps(category)
+            category_json = json.loads(category_json_dump)
+            category_data.append(category_json)
 
 def get_tag_data():
     """function to gather the authors from  wp1"""
-    tags = wpapi1.get('tags')
-    for tag in tags.json():
-        tag_json_dump = json.dumps(tag)
-        tag_json = json.loads(tag_json_dump)
-        tag_data.append(tag_json)
+    pages = wpapi1.get("tags?per_page=" + str(CFG.ENTRIES_PER_PAGE)).headers['X-WP-TotalPages']
+    for page in range(1, int(pages) + 1):
+        print("attempting to gather (" + str(CFG.ENTRIES_PER_PAGE) + ") tags from page (" + str(page) + "/" + str(
+            pages) + ")")
+        tags = wpapi1.get("tags?per_page=" + str(CFG.ENTRIES_PER_PAGE) + "&page=" + str(page))
+        for tag in tags.json():
+            tag_json_dump = json.dumps(tag)
+            tag_json = json.loads(tag_json_dump)
+            tag_data.append(tag_json)
 
 def get_wp1_data():
     """funtion to gather the various data from wp1"""
@@ -177,7 +184,6 @@ if __name__ == "__main__":
     """main function to run the program"""
     get_wp1_data()
     handle_posts()
-    print(len(post_data))
 
 
 ## composition of post json
