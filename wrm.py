@@ -36,26 +36,16 @@ args = parser.parse_args()
 CFG = importlib.import_module('config.' + args.config)
 
 wpapi1 = API(
-    # url=CFG.WP1_ADDRESS,
-    # consumer_key=CFG.WP1_KEY,
-    # consumer_secret=CFG.WP1_SECRET,
-    # api="wp-json",
-    # version="wp/v2",
-    # wp_user=CFG.WP1_USER_NAME,
-    # wp_pass=CFG.WP1_PASSWORD,
-    # oauth1a_3leg=True,
-    # creds_store="~/.wc-api-creds.json",
-    # callback=CFG.WP1_ADDRESS + '/oauth1_callback'
-    url=CFG.WP2_ADDRESS,
-    consumer_key=CFG.WP2_KEY,
-    consumer_secret=CFG.WP2_SECRET,
+    url=CFG.WP1_ADDRESS,
+    consumer_key=CFG.WP1_KEY,
+    consumer_secret=CFG.WP1_SECRET,
     api="wp-json",
     version="wp/v2",
-    wp_user=CFG.WP2_USER_NAME,
-    wp_pass=CFG.WP2_PASSWORD,
+    wp_user=CFG.WP1_USER_NAME,
+    wp_pass=CFG.WP1_PASSWORD,
     oauth1a_3leg=True,
     creds_store="~/.wc-api-creds.json",
-    callback=CFG.WP2_ADDRESS + '/success.html' # REMEMBER TO DISABLE reCAPCHA
+    callback= CFG.WP1_CALLBACK_URL # REMEMBER TO DISABLE reCAPCHA
 )
 wpapi2 = API(
     url=CFG.WP2_ADDRESS,
@@ -65,11 +55,12 @@ wpapi2 = API(
     version="wp/v2",
     wp_user=CFG.WP2_USER_NAME,
     wp_pass=CFG.WP2_PASSWORD,
-    basic_auth = True,
-    user_auth = True
+    oauth1a_3leg=True,
+    creds_store="~/.wc-api-creds.json",
+    callback=CFG.WP2_CALLBACK_URL  # REMEMBER TO DISABLE reCAPCHA
 )
 
-# site 1 data storage. these should all be in json dict format
+# wp 1 data storage. these should all be in json dict format
 post_data = []
 author_data = []
 media_data = []
@@ -80,19 +71,21 @@ def get_post_data():
     """function to gather the posts from  wp1"""
     pages = wpapi1.get("posts?per_page=" + str(CFG.ENTRIES_PER_PAGE)).headers['X-WP-TotalPages']
     for page in range(1, int(pages) + 1):
-        print("attempting to gather (" + str(CFG.ENTRIES_PER_PAGE) + ") posts from page (" + str(page) + "/" + str(pages) + ")")
-        posts = wpapi1.get("posts?per_page=" + str(CFG.ENTRIES_PER_PAGE) + "&page=" + str(page))
+        print(f"attempting to gather {CFG.ENTRIES_PER_PAGE} posts from page ({page}/{pages})")
+        posts = wpapi1.get(f"posts?per_page={CFG.ENTRIES_PER_PAGE}&page={page}")
         for post in posts.json():
             post_json_dump = json.dumps(post)
             post_json = json.loads(post_json_dump)
             post_data.append(post_json)
+            break
+        break
 
 def get_author_data():
     """function to gather the authors from  wp1"""
     pages = wpapi1.get("users?per_page=" + str(CFG.ENTRIES_PER_PAGE)).headers['X-WP-TotalPages']
     for page in range(1, int(pages) + 1):
-        print("attempting to gather (" + str(CFG.ENTRIES_PER_PAGE) + ") users from page (" + str(page) + "/" + str(pages) + ")")
-        users = wpapi1.get("users?per_page=" + str(CFG.ENTRIES_PER_PAGE) + "&page=" + str(page))
+        print(f"attempting to gather {CFG.ENTRIES_PER_PAGE} users from page ({page}/{pages})")
+        users = wpapi1.get(f"users?per_page={CFG.ENTRIES_PER_PAGE}&page={page}")
         for user in users.json():
             user_json_dump = json.dumps(user)
             user_json = json.loads(user_json_dump)
@@ -102,8 +95,8 @@ def get_category_data():
     """function to gather the authors from  wp1"""
     pages = wpapi1.get("categories?per_page=" + str(CFG.ENTRIES_PER_PAGE)).headers['X-WP-TotalPages']
     for page in range(1, int(pages) + 1):
-        print("attempting to gather (" + str(CFG.ENTRIES_PER_PAGE) + ") categories from page (" + str(page) + "/" + str(pages) + ")")
-        categories = wpapi1.get("categories?per_page=" + str(CFG.ENTRIES_PER_PAGE) + "&page=" + str(page))
+        print(f"attempting to gather {CFG.ENTRIES_PER_PAGE} categories from page ({page}/{pages})")
+        categories = wpapi1.get(f"categories?per_page={CFG.ENTRIES_PER_PAGE}&page={page}")
         for category in categories.json():
             category_json_dump = json.dumps(category)
             category_json = json.loads(category_json_dump)
@@ -113,9 +106,8 @@ def get_tag_data():
     """function to gather the authors from  wp1"""
     pages = wpapi1.get("tags?per_page=" + str(CFG.ENTRIES_PER_PAGE)).headers['X-WP-TotalPages']
     for page in range(1, int(pages) + 1):
-        print("attempting to gather (" + str(CFG.ENTRIES_PER_PAGE) + ") tags from page (" + str(page) + "/" + str(
-            pages) + ")")
-        tags = wpapi1.get("tags?per_page=" + str(CFG.ENTRIES_PER_PAGE) + "&page=" + str(page))
+        print(f"attempting to gather {CFG.ENTRIES_PER_PAGE} tags from page ({page}/{pages})")
+        tags = wpapi1.get(f"tags?per_page={CFG.ENTRIES_PER_PAGE}&page={page}")
         for tag in tags.json():
             tag_json_dump = json.dumps(tag)
             tag_json = json.loads(tag_json_dump)
@@ -127,6 +119,7 @@ def get_wp1_data():
     get_author_data()
     get_category_data()
     get_tag_data()
+    # get_menu_data()
 
 def handle_posts():
     """function to handle the list of posts"""
@@ -141,14 +134,14 @@ def handle_posts():
 
 def handle_post_content(content):
     """function to handle the content of a post"""
-    # print("V1", type(content), content)
+    # print(f"V1: {type(content)} {content}")
     soup = BeautifulSoup(content['rendered'], "html.parser")  # , from_encoding="iso-8859-1")
     imgs = soup.findAll('img')
     for img in imgs:
         img_link = str(img).split('src="')[1].split('"')[0]
         if img_link in str(content):
             content = handle_image(img_link, content)
-    # print("V2", type(content), content)
+    # print(f"V2: {type(content)} {content}")
 
 def handle_image(image_link, content):
     """function to handle an image"""
@@ -180,10 +173,24 @@ def handle_post_tags(tag_ids):
         # print(tag)
         pass
 
+def push_wp2_data():
+    """function to push all the data over to the new wp site"""
+    push_wp2_posts()
+
+def push_wp2_posts():
+    """function to push the posts over to the new wp site"""
+    for post in post_data:
+        print(f"pushing post ({post_data.index(post)}/{len(post_data)})")
+        # wpapi2.post('post', post)
+    print(wpapi1.get("posts"))
+    print(wpapi2.get("posts"))
+
 if __name__ == "__main__":
     """main function to run the program"""
     get_wp1_data()
     handle_posts()
+
+    # push_wp2_data()
 
 
 ## composition of post json

@@ -33,7 +33,8 @@ WP1_PASSWORD = ""
 WP1_KEY = ""
 # Consumer secret
 WP1_SECRET = ""
-
+# Callback URL
+WP1_CALLBACK_URL = WP1_ADDRESS + '/success.html'
 
 ## WP2 Config details
 
@@ -47,3 +48,5 @@ WP2_PASSWORD = ""
 WP2_KEY = ""
 # Consumer secret
 WP2_SECRET = ""
+# Callback URL
+WP2_CALLBACK_URL = WP2_ADDRESS + '/success.html'
