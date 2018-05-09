@@ -44,7 +44,7 @@ wpapi1 = API(
     wp_user=CFG.WP1_USER_NAME,
     wp_pass=CFG.WP1_PASSWORD,
     oauth1a_3leg=True,
-    creds_store="~/.wc-api-creds.json",
+    creds_store="~/.wc-api-creds-wp-from.json",
     callback= CFG.WP1_CALLBACK_URL # REMEMBER TO DISABLE reCAPCHA
 )
 wpapi2 = API(
@@ -56,7 +56,7 @@ wpapi2 = API(
     wp_user=CFG.WP2_USER_NAME,
     wp_pass=CFG.WP2_PASSWORD,
     oauth1a_3leg=True,
-    creds_store="~/.wc-api-creds.json",
+    creds_store="~/.wc-api-creds-wp-to.json",
     callback=CFG.WP2_CALLBACK_URL  # REMEMBER TO DISABLE reCAPCHA
 )
 
@@ -66,6 +66,9 @@ author_data = []
 media_data = []
 category_data = []
 tag_data = []
+
+post_data_prepared = []
+
 
 def get_post_data():
     """function to gather the posts from  wp1"""
@@ -125,11 +128,14 @@ def handle_posts():
     """function to handle the list of posts"""
 
     for post in post_data:
-        handle_post_content(post['content'])
-        handle_post_author(post['author'])
-        handle_post_featured_media(post['featured_media'])
-        handle_post_categories(post['categories'])
-        handle_post_tags(post['tags'])
+        new_post = {}
+        new_post['content'] = handle_post_content(post['content'])
+        new_post['status'] = handle_post_status(post['status'])
+        # new_post['author'] = handle_post_author(post['author'])
+        new_post['featured_media'] = handle_post_featured_media(post['featured_media'])
+        new_post['categories'] = handle_post_categories(post['categories'])
+        new_post['tags'] = handle_post_tags(post['tags'])
+        post_data_prepared.append(json.loads(new_post))
     # print(len(post_data))
 
 def handle_post_content(content):
@@ -161,6 +167,10 @@ def handle_post_featured_media(featured_media_id):
 
     pass
 
+def handle_post_status(status):
+    """function to handle the status of a post"""
+    return status
+
 def handle_post_categories(categories_ids):
     """function to handle the categories of a post"""
     for category in category_data:
@@ -169,9 +179,21 @@ def handle_post_categories(categories_ids):
 
 def handle_post_tags(tag_ids):
     """function to handle the tags of a post"""
+    print("handling tags")
+    wp2_tags = []
+    pages = wpapi1.get("tags?per_page=" + str(CFG.ENTRIES_PER_PAGE)).headers['X-WP-TotalPages']
+    for page in range(1, int(pages) + 1):
+        # print(f"attempting to gather {CFG.ENTRIES_PER_PAGE} tags from page ({page}/{pages})")
+        tags = wpapi1.get(f"tags?per_page={CFG.ENTRIES_PER_PAGE}&page={page}")
+        for tag in tags.json():
+            tag_json_dump = json.dumps(tag)
+            tag_json = json.loads(tag_json_dump)
+            wp2_tags.append(tag_json)
+
     for tag in tag_data:
-        # print(tag)
-        pass
+        if tag not in wp2_tags:
+            # wpapi2.post('tags', json.loads(tag)) #############################
+            pass
 
 def push_wp2_data():
     """function to push all the data over to the new wp site"""
@@ -179,18 +201,22 @@ def push_wp2_data():
 
 def push_wp2_posts():
     """function to push the posts over to the new wp site"""
-    for post in post_data:
-        print(f"pushing post ({post_data.index(post)}/{len(post_data)})")
-        # wpapi2.post('post', post)
-    print(wpapi1.get("posts"))
-    print(wpapi2.get("posts"))
+    # for post in post_data:
+    #     print(f"pushing post ({post_data.index(post)}/{len(post_data)})")
+    #     wpapi2.post('post', post)
+
+    new_post = {"title": "Albert Watson: Kaos &#8211; Extended"}
+    result = wpapi2.post("posts", new_post)
+    print(result.json())
+    # print(wpapi1.get("posts"))
+    # print(wpapi2.get("posts"))
 
 if __name__ == "__main__":
     """main function to run the program"""
     get_wp1_data()
     handle_posts()
 
-    # push_wp2_data()
+    push_wp2_data()
 
 
 ## composition of post json
@@ -201,7 +227,7 @@ if __name__ == "__main__":
 # modified
 # modified_gmt
 # slug
-# status
+# status *
 # type
 # link
 # title
