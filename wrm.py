@@ -66,6 +66,7 @@ author_data = []
 media_data = []
 category_data = []
 tag_data = []
+tag_id_data = []
 
 post_data_prepared = []
 
@@ -95,7 +96,7 @@ def get_author_data():
             author_data.append(user_json)
 
 def get_category_data():
-    """function to gather the authors from  wp1"""
+    """function to gather the categories from  wp1"""
     pages = wpapi1.get("categories?per_page=" + str(CFG.ENTRIES_PER_PAGE)).headers['X-WP-TotalPages']
     for page in range(1, int(pages) + 1):
         print(f"attempting to gather {CFG.ENTRIES_PER_PAGE} categories from page ({page}/{pages})")
@@ -106,7 +107,7 @@ def get_category_data():
             category_data.append(category_json)
 
 def get_tag_data():
-    """function to gather the authors from  wp1"""
+    """function to gather the tags from  wp1"""
     pages = wpapi1.get("tags?per_page=" + str(CFG.ENTRIES_PER_PAGE)).headers['X-WP-TotalPages']
     for page in range(1, int(pages) + 1):
         print(f"attempting to gather {CFG.ENTRIES_PER_PAGE} tags from page ({page}/{pages})")
@@ -115,6 +116,8 @@ def get_tag_data():
             tag_json_dump = json.dumps(tag)
             tag_json = json.loads(tag_json_dump)
             tag_data.append(tag_json)
+            tag_id_data.append(tag_json['id'])
+
 
 def get_wp1_data():
     """funtion to gather the various data from wp1"""
@@ -135,7 +138,7 @@ def handle_posts():
         new_post['featured_media'] = handle_post_featured_media(post['featured_media'])
         new_post['categories'] = handle_post_categories(post['categories'])
         new_post['tags'] = handle_post_tags(post['tags'])
-        post_data_prepared.append(json.loads(new_post))
+        post_data_prepared.append(new_post)
     # print(len(post_data))
 
 def handle_post_content(content):
@@ -179,21 +182,37 @@ def handle_post_categories(categories_ids):
 
 def handle_post_tags(tag_ids):
     """function to handle the tags of a post"""
-    print("handling tags")
     wp2_tags = []
-    pages = wpapi1.get("tags?per_page=" + str(CFG.ENTRIES_PER_PAGE)).headers['X-WP-TotalPages']
+    pages = wpapi2.get("tags?per_page=" + str(CFG.ENTRIES_PER_PAGE)).headers['X-WP-TotalPages']
     for page in range(1, int(pages) + 1):
         # print(f"attempting to gather {CFG.ENTRIES_PER_PAGE} tags from page ({page}/{pages})")
-        tags = wpapi1.get(f"tags?per_page={CFG.ENTRIES_PER_PAGE}&page={page}")
+        tags = wpapi2.get(f"tags?per_page={CFG.ENTRIES_PER_PAGE}&page={page}")
         for tag in tags.json():
             tag_json_dump = json.dumps(tag)
             tag_json = json.loads(tag_json_dump)
             wp2_tags.append(tag_json)
 
+    tag_ids_to_return = []
+
     for tag in tag_data:
-        if tag not in wp2_tags:
-            # wpapi2.post('tags', json.loads(tag)) #############################
-            pass
+        for tag_id in tag_ids:
+            if tag['id'] == tag_id:
+                tag_name = tag['name']
+
+                for wp2_tag in wp2_tags:
+                    if wp2_tag['name'] == tag_name:
+                        break #this needs to break from nested loop but not sure how many
+
+        if tag['id'] not in tag_ids:
+            # tag_names.append(tag['name'])
+            new_tag_data = {'name':tag['name']}
+            new_tag = wpapi2.post('tags', new_tag_data)
+            tag_ids_to_return.append(new_tag['id'])
+        # if tag not in wp2_tags:
+        #     new_tag = wpapi2.post('tags', tag)
+        #     new_tag_id = new_tag['id']
+        #     tag_ids_to_return.append(new_tag_id)
+    return tag_ids_to_return
 
 def push_wp2_data():
     """function to push all the data over to the new wp site"""
