@@ -77,11 +77,14 @@ def get_post_data():
     for page in range(1, int(pages) + 1):
         print(f"attempting to gather {CFG.ENTRIES_PER_PAGE} posts from page ({page}/{pages})")
         posts = wpapi1.get(f"posts?per_page={CFG.ENTRIES_PER_PAGE}&page={page}")
+        i = 0
         for post in posts.json():
+            i += 1
             post_json_dump = json.dumps(post)
             post_json = json.loads(post_json_dump)
             post_data.append(post_json)
-            break
+            if i == 1:
+                break
         break
 
 def get_author_data():
@@ -132,16 +135,25 @@ def handle_posts():
 
     for post in post_data:
         new_post = {}
-        new_post['content'] = handle_post_content(post['content'])
+        print(post['id'])
+        post_media = json.loads(wpapi1.get("media?parent=" + str(post['id'])).content)
+        new_post['title'] = handle_post_title(post['title'])
+        new_post['content'] = handle_post_content(post['content'], post_media)
         new_post['status'] = handle_post_status(post['status'])
+        new_post['excerpt'] = handle_post_excerpt(post['excerpt'])
         # new_post['author'] = handle_post_author(post['author'])
-        new_post['featured_media'] = handle_post_featured_media(post['featured_media'])
+        # new_post['featured_media'] = handle_post_featured_media(post['featured_media'])
         new_post['categories'] = handle_post_categories(post['categories'])
         new_post['tags'] = handle_post_tags(post['tags'])
         post_data_prepared.append(new_post)
     # print(len(post_data))
 
-def handle_post_content(content):
+def handle_post_title(title):
+    """function to handle the title of a post"""
+    return title['rendered']
+
+
+def handle_post_content(content, post_media):
     """function to handle the content of a post"""
     # print(f"V1: {type(content)} {content}")
     soup = BeautifulSoup(content['rendered'], "html.parser")  # , from_encoding="iso-8859-1")
@@ -149,13 +161,49 @@ def handle_post_content(content):
     for img in imgs:
         img_link = str(img).split('src="')[1].split('"')[0]
         if img_link in str(content):
-            content = handle_image(img_link, content)
+            content = handle_image_in_content(img_link, content, post_media)
     # print(f"V2: {type(content)} {content}")
+    return content['rendered'].replace("'", '\u0027').replace('"', '\'')
 
-def handle_image(image_link, content):
+def handle_image_in_content(image_link, content, media_items):
     """function to handle an image"""
-    content['rendered'] = content['rendered'].replace(image_link, "NULL_GOES_HERE")
+    # check that image is an internal link
+    if str(CFG.WP1_ADDRESS).split('://')[1] in image_link:
+        # retreive meta data about image
+        new_media_item = {}
+        for media_item in media_items:
+            if str(media_item['source_url']).split('://')[1] == image_link.split('://')[1]:
+                new_media_item['file'] = media_item['source_url']
+                new_media_item['title'] = media_item['title']
+                # print(media_item['content-type'])
+                # new_media_item['content-type'] = media_item['content-type'] # I don't know if this will work
+
+        # download the linked file
+
+        # upload the new image
+        content['rendered'] = content['rendered'].replace(image_link, "NULL_GOES_HERE")
+
+
     return content
+
+
+
+
+
+def handle_featured_media(featured_media_id):
+    """function to handle the featured media"""
+    # retreive meta data about image
+
+    # download the linked file
+
+    # upload the new image
+
+    # return the new image's id
+    pass
+
+def handle_post_excerpt(excerpt):
+    """function to handle the post excerpt"""
+    return excerpt['rendered'].replace("'", '\u0027').replace('"', '\'')
 
 
 def handle_post_author(author_id):
@@ -174,11 +222,35 @@ def handle_post_status(status):
     """function to handle the status of a post"""
     return status
 
-def handle_post_categories(categories_ids):
+def handle_post_categories(category_ids):
     """function to handle the categories of a post"""
-    for category in category_data:
-        # print(category)
-        pass
+    # for category in category_data:
+    #     # print(category)
+    #     pass
+    wp2_categories = []
+    pages = wpapi2.get("categories?per_page=" + str(CFG.ENTRIES_PER_PAGE)).headers['X-WP-TotalPages']
+    for page in range(1, int(pages) + 1):
+        categories = wpapi2.get(f"categories?per_page={CFG.ENTRIES_PER_PAGE}&page={page}")
+        for category in categories.json():
+            category_json_dump = json.dumps(category)
+            category_json = json.loads(category_json_dump)
+            wp2_categories.append(category_json)
+
+    category_ids_to_return = []
+
+    for category_id in category_ids:
+        for category in category_data:
+            if category['id'] == category_id:
+                category_name = category['name']
+                no_match = True
+                for wp2_category in wp2_categories:
+                    if wp2_category['name'] == category['name']:
+                        category_ids_to_return.append(wp2_category['id'])
+                        no_match = False
+                if no_match == True:
+                    new_category = wpapi2.post('categories', {'name': str(category_name)})
+                    category_ids_to_return.append(json.loads(new_category.content)['id'])
+    return category_ids_to_return
 
 def handle_post_tags(tag_ids):
     """function to handle the tags of a post"""
@@ -194,24 +266,18 @@ def handle_post_tags(tag_ids):
 
     tag_ids_to_return = []
 
-    for tag in tag_data:
-        for tag_id in tag_ids:
+    for tag_id in tag_ids:
+        for tag in tag_data:
             if tag['id'] == tag_id:
                 tag_name = tag['name']
-
+                no_match = True
                 for wp2_tag in wp2_tags:
-                    if wp2_tag['name'] == tag_name:
-                        break #this needs to break from nested loop but not sure how many
-
-        if tag['id'] not in tag_ids:
-            # tag_names.append(tag['name'])
-            new_tag_data = {'name':tag['name']}
-            new_tag = wpapi2.post('tags', new_tag_data)
-            tag_ids_to_return.append(new_tag['id'])
-        # if tag not in wp2_tags:
-        #     new_tag = wpapi2.post('tags', tag)
-        #     new_tag_id = new_tag['id']
-        #     tag_ids_to_return.append(new_tag_id)
+                    if wp2_tag['name'] == tag['name']:
+                        tag_ids_to_return.append(wp2_tag['id'])
+                        no_match = False
+                if no_match == True:
+                    new_tag = wpapi2.post('tags', {'name':str(tag_name)})
+                    tag_ids_to_return.append(json.loads(new_tag.content)['id'])
     return tag_ids_to_return
 
 def push_wp2_data():
@@ -223,10 +289,11 @@ def push_wp2_posts():
     # for post in post_data:
     #     print(f"pushing post ({post_data.index(post)}/{len(post_data)})")
     #     wpapi2.post('post', post)
-
-    new_post = {"title": "Albert Watson: Kaos &#8211; Extended"}
-    result = wpapi2.post("posts", new_post)
-    print(result.json())
+    for post in post_data_prepared:
+        # new_post = json.dumps(post_data_prepared[0])
+        # print(new_post)
+        result = wpapi2.post("posts", post)
+    # print(result.json())
     # print(wpapi1.get("posts"))
     # print(wpapi2.get("posts"))
 
@@ -251,7 +318,7 @@ if __name__ == "__main__":
 # link
 # title
 # content *
-# excerpt
+# excerpt *
 # author *
 # featured_media *
 # comment_status
