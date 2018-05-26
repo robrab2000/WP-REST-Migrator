@@ -25,7 +25,7 @@ __license__ = "GPLv3"
 __maintainer__ = "Robert J Homewood"
 __version__ = "0.0.1"
 
-import argparse, importlib, os, sys, json
+import argparse, importlib, os, sys, json, pickle
 from wordpress import API
 from bs4 import BeautifulSoup
 
@@ -83,9 +83,9 @@ def get_post_data():
             post_json_dump = json.dumps(post)
             post_json = json.loads(post_json_dump)
             post_data.append(post_json)
-            if i == 1:
-                break
-        break
+            # if i == 1:
+            #     break
+        # break
 
 def get_author_data():
     """function to gather the authors from  wp1"""
@@ -121,9 +121,21 @@ def get_tag_data():
             tag_data.append(tag_json)
             tag_id_data.append(tag_json['id'])
 
+def get_media_data():
+    """function to gather the tags from  wp1"""
+    pages = wpapi1.get("media?per_page=" + str(CFG.ENTRIES_PER_PAGE)).headers['X-WP-TotalPages']
+    for page in range(1, int(pages) + 1):
+        print(f"attempting to gather {CFG.ENTRIES_PER_PAGE} media from page ({page}/{pages})")
+        media_items = wpapi1.get(f"media?per_page={CFG.ENTRIES_PER_PAGE}&page={page}")
+        for media_item in media_items.json():
+            media_json_dump = json.dumps(media_item)
+            media_json = json.loads(media_json_dump)
+            media_data.append(media_json)
+            # media_id_data.append(media_json['id'])
 
 def get_wp1_data():
     """funtion to gather the various data from wp1"""
+    get_media_data()
     get_post_data()
     get_author_data()
     get_category_data()
@@ -132,13 +144,11 @@ def get_wp1_data():
 
 def handle_posts():
     """function to handle the list of posts"""
-
     for post in post_data:
         new_post = {}
-        print(post['id'])
-        post_media = json.loads(wpapi1.get("media?parent=" + str(post['id'])).content)
+        # post_media = json.loads(wpapi1.get("media?parent=" + str(post['id'])).content)
         new_post['title'] = handle_post_title(post['title'])
-        new_post['content'] = handle_post_content(post['content'], post_media)
+        new_post['content'] = handle_post_content(post['content'])
         new_post['status'] = handle_post_status(post['status'])
         new_post['excerpt'] = handle_post_excerpt(post['excerpt'])
         # new_post['author'] = handle_post_author(post['author'])
@@ -146,14 +156,14 @@ def handle_posts():
         new_post['categories'] = handle_post_categories(post['categories'])
         new_post['tags'] = handle_post_tags(post['tags'])
         post_data_prepared.append(new_post)
-    # print(len(post_data))
+        break
 
 def handle_post_title(title):
     """function to handle the title of a post"""
     return title['rendered']
 
 
-def handle_post_content(content, post_media):
+def handle_post_content(content):
     """function to handle the content of a post"""
     # print(f"V1: {type(content)} {content}")
     soup = BeautifulSoup(content['rendered'], "html.parser")  # , from_encoding="iso-8859-1")
@@ -161,17 +171,18 @@ def handle_post_content(content, post_media):
     for img in imgs:
         img_link = str(img).split('src="')[1].split('"')[0]
         if img_link in str(content):
-            content = handle_image_in_content(img_link, content, post_media)
+            content = handle_image_in_content(img_link, content)
     # print(f"V2: {type(content)} {content}")
     return content['rendered'].replace("'", '\u0027').replace('"', '\'')
 
-def handle_image_in_content(image_link, content, media_items):
+def handle_image_in_content(image_link, content):
+    return content
     """function to handle an image"""
     # check that image is an internal link
     if str(CFG.WP1_ADDRESS).split('://')[1] in image_link:
         # retreive meta data about image
         new_media_item = {}
-        for media_item in media_items:
+        for media_item in media_data:
             if str(media_item['source_url']).split('://')[1] == image_link.split('://')[1]:
                 new_media_item['file'] = media_item['source_url']
                 new_media_item['title'] = media_item['title']
@@ -185,9 +196,6 @@ def handle_image_in_content(image_link, content, media_items):
 
 
     return content
-
-
-
 
 
 def handle_featured_media(featured_media_id):
@@ -280,6 +288,49 @@ def handle_post_tags(tag_ids):
                     tag_ids_to_return.append(json.loads(new_tag.content)['id'])
     return tag_ids_to_return
 
+def serialize_wp1_data():
+    """function to serialize the data from wp1"""
+    data_to_serialize = {}
+    data_to_serialize['post_data'] = post_data
+    data_to_serialize['author_data'] = author_data
+    data_to_serialize['media_data'] = media_data
+    data_to_serialize['category_data'] = category_data
+    data_to_serialize['tag_data'] = tag_data
+    data_to_serialize['tag_id_data'] = tag_id_data
+
+    for file_name, data in data_to_serialize.items():
+        with open (CFG.DATA + "/" + file_name + ".txt", 'wb') as dump_file:
+            pickle.dump(data, dump_file)
+
+def deserialize_wp1_data():
+    """function to serialize the data from wp1"""
+    data_to_deserialize = {}
+    data_to_deserialize['post_data'] = []
+    data_to_deserialize['author_data'] = []
+    data_to_deserialize['media_data'] = []
+    data_to_deserialize['category_data'] = []
+    data_to_deserialize['tag_data'] = []
+    data_to_deserialize['tag_id_data'] = []
+
+    for name in data_to_deserialize.keys():
+        with open(CFG.DATA + "/" + name + ".txt", 'rb') as read_file:
+            data_to_deserialize[name] = pickle.load(read_file)
+
+    global post_data, author_data, media_data, category_data, tag_data, tag_id_data
+    post_data = data_to_deserialize['post_data']
+    author_data = data_to_deserialize['author_data']
+    media_data = data_to_deserialize['media_data']
+    category_data = data_to_deserialize['category_data']
+    tag_data = data_to_deserialize['tag_data']
+    tag_id_data = data_to_deserialize['tag_id_data']
+
+    #  post_data = pickle.load(CFG.DATA + "/post_data.txt")
+    # author_data = pickle.load(CFG.DATA + "/author_data.txt")
+    # media_data = pickle.load(CFG.DATA + "/media_data.txt")
+    # category_data = pickle.load(CFG.DATA + "/category_data.txt")
+    # tag_data = pickle.load(CFG.DATA + "/tag_data.txt")
+    # tag_id_data = pickle.load(CFG.DATA + "/tag_id_data.txt")
+
 def push_wp2_data():
     """function to push all the data over to the new wp site"""
     push_wp2_posts()
@@ -299,10 +350,12 @@ def push_wp2_posts():
 
 if __name__ == "__main__":
     """main function to run the program"""
-    get_wp1_data()
+    deserialize_wp1_data()
+    # get_wp1_data()
     handle_posts()
 
-    push_wp2_data()
+    # serialize_wp1_data()
+    # push_wp2_data()
 
 
 ## composition of post json
