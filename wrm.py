@@ -25,7 +25,7 @@ __license__ = "GPLv3"
 __maintainer__ = "Robert J Homewood"
 __version__ = "0.0.1"
 
-import argparse, importlib, os, sys, json, pickle
+import argparse, importlib, os, sys, json, pickle, requests
 from wordpress import API
 from bs4 import BeautifulSoup
 
@@ -60,6 +60,29 @@ wpapi2 = API(
     callback=CFG.WP2_CALLBACK_URL  # REMEMBER TO DISABLE reCAPCHA
 )
 
+wpapi2_basic = API(
+    url=CFG.WP2_ADDRESS,
+    consumer_key=CFG.WP2_KEY,
+    consumer_secret=CFG.WP2_SECRET,
+    api="wp-json",
+    version="wp/v2",
+    wp_user=CFG.WP2_USER_NAME,
+    wp_pass=CFG.WP2_PASSWORD,
+    basic_auth = True,
+    user_auth = True,
+    # oauth1a_3leg=True,
+    # creds_store="~/.wc-api-creds-wp-to.json",
+    # callback=CFG.WP2_CALLBACK_URL  # REMEMBER TO DISABLE reCAPCHA
+
+    # url="http://example.com",
+    # api="wp-json",
+    # version='wp/v2',
+    # wp_user="XXXX",
+    # wp_pass="XXXX",
+
+
+)
+
 # wp 1 data storage. these should all be in json dict format
 post_data = []
 author_data = []
@@ -69,6 +92,7 @@ tag_data = []
 tag_id_data = []
 
 post_data_prepared = []
+wp2_media_data = []
 
 
 def get_post_data():
@@ -133,6 +157,18 @@ def get_media_data():
             media_data.append(media_json)
             # media_id_data.append(media_json['id'])
 
+def get_wp2_media_data():
+    """function to gather the tags from  wp2"""
+    pages = wpapi2.get("media?per_page=" + str(CFG.ENTRIES_PER_PAGE)).headers['X-WP-TotalPages']
+    for page in range(1, int(pages) + 1):
+        # print(f"attempting to gather {CFG.ENTRIES_PER_PAGE} media from page ({page}/{pages}) from wp2")
+        media_items = wpapi2.get(f"media?per_page={CFG.ENTRIES_PER_PAGE}&page={page}")
+        for media_item in media_items.json():
+            media_json_dump = json.dumps(media_item)
+            media_json = json.loads(media_json_dump)
+            media_data.append(media_json)
+            # media_id_data.append(media_json['id'])
+
 def get_wp1_data():
     """funtion to gather the various data from wp1"""
     get_media_data()
@@ -148,7 +184,10 @@ def handle_posts():
         new_post = {}
         # post_media = json.loads(wpapi1.get("media?parent=" + str(post['id'])).content)
         new_post['title'] = handle_post_title(post['title'])
-        new_post['content'] = handle_post_content(post['content'])
+        content_and_media_ids = handle_post_content(post['content'])
+        new_post['content'] = content_and_media_ids[0]
+        new_post['media_ids'] = content_and_media_ids[1]
+
         new_post['status'] = handle_post_status(post['status'])
         new_post['excerpt'] = handle_post_excerpt(post['excerpt'])
         # new_post['author'] = handle_post_author(post['author'])
@@ -168,34 +207,81 @@ def handle_post_content(content):
     # print(f"V1: {type(content)} {content}")
     soup = BeautifulSoup(content['rendered'], "html.parser")  # , from_encoding="iso-8859-1")
     imgs = soup.findAll('img')
+
+    media_id = []
+
     for img in imgs:
         img_link = str(img).split('src="')[1].split('"')[0]
         if img_link in str(content):
-            content = handle_image_in_content(img_link, content)
+            content_with_media_id = handle_image_in_content(img_link, content)
+            content = content_with_media_id[0]
+            media_id.append(content_with_media_id[1])
     # print(f"V2: {type(content)} {content}")
-    return content['rendered'].replace("'", '\u0027').replace('"', '\'')
+    return (content['rendered'].replace("'", '\u0027').replace('"', '\''), media_id)
 
 def handle_image_in_content(image_link, content):
-    return content
     """function to handle an image"""
+    new_media_id = None
+    new_media_link = None
     # check that image is an internal link
     if str(CFG.WP1_ADDRESS).split('://')[1] in image_link:
+
+        # check if the image is already in the media wp2 library
+        get_wp2_media_data()
+        for media_item in wp2_media_data:
+            if str(media_item['source_url']).split('://')[1] in image_link.split('://')[1]:
+                new_media_link = media_item['source_url']
+                new_media_id = media_item['id']
         # retreive meta data about image
         new_media_item = {}
         for media_item in media_data:
-            if str(media_item['source_url']).split('://')[1] == image_link.split('://')[1]:
-                new_media_item['file'] = media_item['source_url']
+            # print(str(media_item['source_url']).split('://')[1], image_link.split('://')[1])
+            if str(media_item['source_url']).split('://')[1] in image_link.split('://')[1]:
+                # new_media_item['file'] = media_item['source_url']
                 new_media_item['title'] = media_item['title']
-                # print(media_item['content-type'])
+                # new_media_item['status'] = media_item['status']
+                new_media_item['meta'] = media_item['meta']
+                new_media_item['alt_text'] = media_item['alt_text']
+                new_media_item['caption'] = media_item['caption']
+                new_media_item['description'] = media_item['description']
                 # new_media_item['content-type'] = media_item['content-type'] # I don't know if this will work
 
-        # download the linked file
+                filename = str(media_item['source_url']).rsplit('/', 1)[1]#.split('.')[0]
+                extension = str(media_item['source_url']).rsplit('/', 1)[1].split('.')[1]
 
-        # upload the new image
-        content['rendered'] = content['rendered'].replace(image_link, "NULL_GOES_HERE")
+                # download the media file
+                local_image_location = CFG.IMAGE_DUMP + "/" + filename
+                # print(local_image_location)
+                with open(local_image_location, 'wb') as f:
+                    f.write(requests.get(media_item['source_url']).content)
+
+                headers = {
+                    'cache-control': 'no-cache',
+                    'content-disposition': 'attachment; filename=%s' % filename,
+                    'content-type': 'image/%s' % extension
+                }
+
+                data = open(local_image_location, 'rb').read()
+
+                # upload the new image
+                media_post_return = wpapi2_basic.post("media", data, headers=headers)
+
+                new_media_id = json.loads(media_post_return.content)['id']
+                new_media_link = media_item['source_url']
 
 
-    return content
+                # delete the dumped image
+                os.remove(local_image_location)
+
+                # update the image meta
+                wpapi2.post("media/" + str(new_media_id), new_media_item)
+
+        content['rendered'] = content['rendered'].replace(image_link, new_media_link)
+
+        return_tuple = (content, new_media_id)
+
+    #return the content as well as the image id so we can add the post id to it later
+    return return_tuple
 
 
 def handle_featured_media(featured_media_id):
@@ -343,10 +429,22 @@ def push_wp2_posts():
     for post in post_data_prepared:
         # new_post = json.dumps(post_data_prepared[0])
         # print(new_post)
+        media_ids = post['media_ids']
+        del post['media_ids']
         result = wpapi2.post("posts", post)
+
+        update_media_ids_for_post(json.loads(result.content)['id'], media_ids)
+
     # print(result.json())
     # print(wpapi1.get("posts"))
     # print(wpapi2.get("posts"))
+
+def update_media_ids_for_post(post_id, media_ids):
+    for media_id in media_ids:
+        media_item_data = json.loads(wpapi2.get('media/' + str(media_id)).content)
+        media_item_data['post'] = post_id
+        del media_item_data['status']
+        wpapi2_basic.post('media/' + str(media_id), media_item_data)
 
 if __name__ == "__main__":
     """main function to run the program"""
@@ -355,7 +453,7 @@ if __name__ == "__main__":
     handle_posts()
 
     # serialize_wp1_data()
-    # push_wp2_data()
+    push_wp2_data()
 
 
 ## composition of post json
