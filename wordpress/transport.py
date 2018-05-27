@@ -30,7 +30,7 @@ class API_Requests_Wrapper(object):
         self.url = url
         self.api = kwargs.get("api", __default_api__)
         self.api_version = kwargs.get("version", __default_api_version__)
-        self.timeout = kwargs.get("timeout", 5)
+        self.timeout = kwargs.get("timeout", 225)
         self.verify_ssl = kwargs.get("verify_ssl", True)
         self.session = Session()
 
