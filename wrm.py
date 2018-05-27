@@ -180,7 +180,10 @@ def get_wp1_data():
 
 def handle_posts():
     """function to handle the list of posts"""
+    index = 0
     for post in post_data:
+        print(f"handling post {index} of {len(post_data) + 1}")
+        index += 1
         new_post = {}
         # post_media = json.loads(wpapi1.get("media?parent=" + str(post['id'])).content)
         new_post['title'] = handle_post_title(post['title'])
@@ -191,11 +194,12 @@ def handle_posts():
         new_post['status'] = handle_post_status(post['status'])
         new_post['excerpt'] = handle_post_excerpt(post['excerpt'])
         # new_post['author'] = handle_post_author(post['author'])
-        # new_post['featured_media'] = handle_post_featured_media(post['featured_media'])
+        new_post['featured_media'] = handle_post_featured_media(post['featured_media'])
         new_post['categories'] = handle_post_categories(post['categories'])
         new_post['tags'] = handle_post_tags(post['tags'])
         post_data_prepared.append(new_post)
-        break
+        if index == 10:
+            break
 
 def handle_post_title(title):
     """function to handle the title of a post"""
@@ -232,6 +236,9 @@ def handle_image_in_content(image_link, content):
             if str(media_item['source_url']).split('://')[1] in image_link.split('://')[1]:
                 new_media_link = media_item['source_url']
                 new_media_id = media_item['id']
+                content['rendered'] = content['rendered'].replace(image_link, new_media_link)
+                return_tuple = (content, new_media_id)
+                return return_tuple
         # retreive meta data about image
         new_media_item = {}
         for media_item in media_data:
@@ -246,54 +253,48 @@ def handle_image_in_content(image_link, content):
                 new_media_item['description'] = media_item['description']
                 # new_media_item['content-type'] = media_item['content-type'] # I don't know if this will work
 
-                filename = str(media_item['source_url']).rsplit('/', 1)[1]#.split('.')[0]
-                extension = str(media_item['source_url']).rsplit('/', 1)[1].split('.')[1]
-
-                # download the media file
-                local_image_location = CFG.IMAGE_DUMP + "/" + filename
-                # print(local_image_location)
-                with open(local_image_location, 'wb') as f:
-                    f.write(requests.get(media_item['source_url']).content)
-
-                headers = {
-                    'cache-control': 'no-cache',
-                    'content-disposition': 'attachment; filename=%s' % filename,
-                    'content-type': 'image/%s' % extension
-                }
-
-                data = open(local_image_location, 'rb').read()
-
-                # upload the new image
-                media_post_return = wpapi2_basic.post("media", data, headers=headers)
-
-                new_media_id = json.loads(media_post_return.content)['id']
-                new_media_link = media_item['source_url']
-
-
-                # delete the dumped image
-                os.remove(local_image_location)
+                uploaded_media_item = upload_media_item(media_item['source_url'])
+                new_media_link = uploaded_media_item[0]
+                new_media_id = uploaded_media_item[1]
 
                 # update the image meta
                 wpapi2.post("media/" + str(new_media_id), new_media_item)
 
-        content['rendered'] = content['rendered'].replace(image_link, new_media_link)
+                content['rendered'] = content['rendered'].replace(image_link, new_media_link)
 
         return_tuple = (content, new_media_id)
 
     #return the content as well as the image id so we can add the post id to it later
     return return_tuple
 
+def upload_media_item(source_url):
+    filename = str(source_url).rsplit('/', 1)[1]  # .split('.')[0]
+    extension = str(source_url).rsplit('/', 1)[1].split('.')[1]
 
-def handle_featured_media(featured_media_id):
-    """function to handle the featured media"""
-    # retreive meta data about image
+    # download the media file
+    local_image_location = CFG.IMAGE_DUMP + "/" + filename
+    # print(local_image_location)
+    with open(local_image_location, 'wb') as f:
+        f.write(requests.get(source_url).content)
 
-    # download the linked file
+    headers = {
+        'cache-control': 'no-cache',
+        'content-disposition': 'attachment; filename=%s' % filename,
+        'content-type': 'image/%s' % extension
+    }
+
+    data = open(local_image_location, 'rb').read()
 
     # upload the new image
+    media_post_return = wpapi2_basic.post("media", data, headers=headers)
 
-    # return the new image's id
-    pass
+    new_media_id = json.loads(media_post_return.content)['id']
+    new_media_link = source_url
+
+    # delete the dumped image
+    os.remove(local_image_location)
+
+    return (new_media_link, new_media_id)
 
 def handle_post_excerpt(excerpt):
     """function to handle the post excerpt"""
@@ -309,8 +310,10 @@ def handle_post_author(author_id):
 def handle_post_featured_media(featured_media_id):
     """function to handle the featured_media of a post"""
     # print("featured media:", featured_media)
-
-    pass
+    for media_item in media_data:
+        if media_item['id'] == featured_media_id:
+            uploaded_media = upload_media_item(media_item['source_url'])
+            return uploaded_media[1]
 
 def handle_post_status(status):
     """function to handle the status of a post"""
@@ -433,18 +436,29 @@ def push_wp2_posts():
         del post['media_ids']
         result = wpapi2.post("posts", post)
 
-        update_media_ids_for_post(json.loads(result.content)['id'], media_ids)
+        new_post_data = json.loads(result.content)
+
+        update_media_ids_for_post(new_post_data['id'], media_ids, new_post_data['featured_media'])
 
     # print(result.json())
     # print(wpapi1.get("posts"))
     # print(wpapi2.get("posts"))
 
-def update_media_ids_for_post(post_id, media_ids):
+def update_media_ids_for_post(post_id, media_ids, featured_image_id):
+    """attach images to posts"""
+    # handle images in posts
     for media_id in media_ids:
         media_item_data = json.loads(wpapi2.get('media/' + str(media_id)).content)
+        #might need to check about images being attached to more than one post
         media_item_data['post'] = post_id
         del media_item_data['status']
-        wpapi2_basic.post('media/' + str(media_id), media_item_data)
+        wpapi2.post('media/' + str(media_id), media_item_data)
+
+    # handle featured image
+    media_item_data = json.loads(wpapi2.get('media/' + str(featured_image_id)).content)
+    media_item_data['post'] = post_id
+    del media_item_data['status']
+    wpapi2.post('media/' + str(featured_image_id), media_item_data)
 
 if __name__ == "__main__":
     """main function to run the program"""
