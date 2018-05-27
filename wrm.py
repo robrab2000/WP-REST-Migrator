@@ -44,7 +44,7 @@ wpapi1 = API(
     wp_user=CFG.WP1_USER_NAME,
     wp_pass=CFG.WP1_PASSWORD,
     oauth1a_3leg=True,
-    creds_store="~/.wc-api-creds-wp-from.json",
+    creds_store=CFG.WP1_CRED_STORE, # delete file if you swap application creds
     callback= CFG.WP1_CALLBACK_URL # REMEMBER TO DISABLE reCAPCHA
 )
 wpapi2 = API(
@@ -56,7 +56,7 @@ wpapi2 = API(
     wp_user=CFG.WP2_USER_NAME,
     wp_pass=CFG.WP2_PASSWORD,
     oauth1a_3leg=True,
-    creds_store="~/.wc-api-creds-wp-to.json",
+    creds_store=CFG.WP2_CRED_STORE, # delete file if you swap application creds
     callback=CFG.WP2_CALLBACK_URL  # REMEMBER TO DISABLE reCAPCHA
 )
 
@@ -172,11 +172,11 @@ def get_wp1_data():
 def handle_posts():
     """function to handle the list of posts"""
     index = 0
-    last_index = len(post_data)
+    last_index = 105#len(post_data)
     for post in post_data:
         index += 1
-        # if index <= last_index -1:
-        #     continue
+        if index <= 100: #last_index -1:
+            continue
         print(f"handling post {index} of {len(post_data)}: {post['title']}")
         new_post = {}
         # post_media = json.loads(wpapi1.get("media?parent=" + str(post['id'])).content)
@@ -184,7 +184,8 @@ def handle_posts():
         content_and_media_ids = handle_post_content(post)
         new_post['content'] = content_and_media_ids[0]
         new_post['media_ids'] = content_and_media_ids[1]
-
+        new_post['date'] = handle_post_created_date(post['date'])
+        new_post['slug'] = handle_post_slug(post['slug'])
         new_post['status'] = handle_post_status(post['status'])
         new_post['excerpt'] = handle_post_excerpt(post['excerpt'])
         # new_post['author'] = handle_post_author(post['author'])
@@ -192,12 +193,20 @@ def handle_posts():
         new_post['categories'] = handle_post_categories(post['categories'])
         new_post['tags'] = handle_post_tags(post['tags'])
         post_data_prepared.append(new_post)
-        # if index == last_index:
-        #     break
+        if index == last_index:
+            break
+
+def handle_post_slug(slug):
+    """function to handle the created date of a post"""
+    return slug
 
 def handle_post_title(title):
     """function to handle the title of a post"""
     return title['rendered']
+
+def handle_post_created_date(date):
+    """function to handle the created date of a post"""
+    return date
 
 
 def handle_post_content(post):
@@ -438,7 +447,7 @@ def push_wp2_data():
 
 def push_wp2_posts():
     """function to push the posts over to the new wp site"""
-    print("sending new posts to wp2")
+    # print("sending new posts to wp2")
     index = 0
     for post in post_data_prepared:
         index += 1
@@ -484,9 +493,9 @@ if __name__ == "__main__":
     """main function to run the program"""
     deserialize_wp1_data()
     # get_wp1_data()
+    # serialize_wp1_data()
     handle_posts()
 
-    # serialize_wp1_data()
     push_wp2_data()
     stop_timer()
 
