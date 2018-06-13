@@ -199,6 +199,7 @@ venv.bak/
 # config files
 /config/*
 /data/*
+!/data/readme
 !/config/default-config.py
 !/config/default-keys.py
 /cred_store/*
