@@ -35,6 +35,13 @@ args = parser.parse_args()
 
 CFG = importlib.import_module('config.' + args.config)
 
+# delete any old cred files
+if os.path.isfile(CFG.WP1_CRED_STORE):
+    os.remove(CFG.WP1_CRED_STORE)
+
+if os.path.isfile(CFG.WP2_CRED_STORE):
+    os.remove(CFG.WP2_CRED_STORE)
+
 wpapi1 = API(
     url=CFG.WP1_ADDRESS,
     consumer_key=CFG.WP1_KEY,
@@ -44,7 +51,7 @@ wpapi1 = API(
     wp_user=CFG.WP1_USER_NAME,
     wp_pass=CFG.WP1_PASSWORD,
     oauth1a_3leg=True,
-    creds_store=CFG.WP1_CRED_STORE, # delete file if you swap application creds
+    creds_store=CFG.WP1_CRED_STORE,
     callback= CFG.WP1_CALLBACK_URL # REMEMBER TO DISABLE reCAPCHA
 )
 wpapi2 = API(
@@ -56,7 +63,7 @@ wpapi2 = API(
     wp_user=CFG.WP2_USER_NAME,
     wp_pass=CFG.WP2_PASSWORD,
     oauth1a_3leg=True,
-    creds_store=CFG.WP2_CRED_STORE, # delete file if you swap application creds
+    creds_store=CFG.WP2_CRED_STORE,
     callback=CFG.WP2_CALLBACK_URL  # REMEMBER TO DISABLE reCAPCHA
 )
 
@@ -172,11 +179,11 @@ def get_wp1_data():
 def handle_posts():
     """function to handle the list of posts"""
     index = 0
-    last_index = 105#len(post_data)
+    last_index = len(post_data)
     for post in post_data:
         index += 1
-        if index <= 100: #last_index -1:
-            continue
+        # if index <= last_index -1:
+        #     continue
         print(f"handling post {index} of {len(post_data)}: {post['title']}")
         new_post = {}
         # post_media = json.loads(wpapi1.get("media?parent=" + str(post['id'])).content)
@@ -193,8 +200,8 @@ def handle_posts():
         new_post['categories'] = handle_post_categories(post['categories'])
         new_post['tags'] = handle_post_tags(post['tags'])
         post_data_prepared.append(new_post)
-        if index == last_index:
-            break
+        # if index == last_index:
+        #     break
 
 def handle_post_slug(slug):
     """function to handle the created date of a post"""
@@ -310,7 +317,7 @@ def upload_media_item(source_url):
     media_post_return = wpapi2_basic.post("media", data, headers=headers)
 
     new_media_id = json.loads(media_post_return.content)['id']
-    new_media_link = source_url
+    new_media_link = json.loads(media_post_return.content)['source_url']
 
     # delete the dumped image
     os.remove(local_image_location)
@@ -491,9 +498,9 @@ def stop_timer():
 
 if __name__ == "__main__":
     """main function to run the program"""
-    deserialize_wp1_data()
-    # get_wp1_data()
-    # serialize_wp1_data()
+    # deserialize_wp1_data()
+    get_wp1_data()
+    serialize_wp1_data()
     handle_posts()
 
     push_wp2_data()

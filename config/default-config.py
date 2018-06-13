@@ -18,35 +18,46 @@ Copyright 2018, Robert J Homewood
 # Entries to scrape per page
 ENTRIES_PER_PAGE = 100
 
+# Temp image location
+IMAGE_DUMP = "./image_dump"
+
+# serialized data storage
+DATA = "./data"
+
 ## WP1 : Wordpress address being exported from
 ## WP2 : Wordpress address being exported to
 
 ## WP1 Config details
 
 # Site address
-WP1_ADDRESS = "https://"
+WP1_ADDRESS = "https://example-site-one.com"
 # User name
-WP1_USER_NAME = ""
+WP1_USER_NAME = "your-user-name"
 # Password
-WP1_PASSWORD = ""
+WP1_PASSWORD = "your-user-password"
 # Consumer key
-WP1_KEY = ""
+WP1_KEY = "your-application-key"
 # Consumer secret
-WP1_SECRET = ""
+WP1_SECRET = "your-application-secret"
+# Credential storage
+WP1_CRED_STORE = "./cred_store/.wc-api-creds-wp-from.json"
 # Callback URL
 WP1_CALLBACK_URL = WP1_ADDRESS + '/success.html'
+
 
 ## WP2 Config details
 
 # Site address
-WP2_ADDRESS = "https://"
+WP2_ADDRESS = "https://example-site-two.com"
 # User name
-WP2_USER_NAME = ""
+WP2_USER_NAME = "your-user-name"
 # Password
-WP2_PASSWORD = ""
+WP2_PASSWORD = "your-user-password"
 # Consumer key
-WP2_KEY = ""
+WP2_KEY = "your-application-key"
 # Consumer secret
-WP2_SECRET = ""
+WP2_SECRET = "your-application-secret"
+# Credential storage
+WP2_CRED_STORE = "./cred_store/.wc-api-creds-wp-to.json"
 # Callback URL
 WP2_CALLBACK_URL = WP2_ADDRESS + '/success.html'
