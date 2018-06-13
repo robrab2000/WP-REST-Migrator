@@ -26,7 +26,7 @@ Remember to disable reCapcha from your sites before attempting the migration
 - [ ] Export pages (including media contained)
 - [ ] Export menus
 - [ ] Make wordpress plugin for automating application setup
-- [ ] Allow post/page exclusions
+- [ ] Allow post/page exclusions
 
 ## Requirements
 - 
