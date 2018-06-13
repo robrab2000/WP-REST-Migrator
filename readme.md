@@ -53,7 +53,7 @@ I built this for my own use but I'm happy to keep working on it if people find i
 - Check that you have the correct ownership and permissions set for the directory that of the Wordpress installation you are migrating to
 - Disable security plugins (including captcha and anything else you think might get in the way)
 - Create a file called `success.html` and put a copy in both wp folders (this file can just contain `<p>Success!</p>`. I have included an example of this in the repo))
-- In each Wordpress installation, set up an 'Application' (found under "Users" menu in the backend). They will ask for some details so I have included some you can use below, in the Application Template section)
+- In each Wordpress installation, set up an *"Application"* (found under *"Users"* menu in the backend). They will ask for some details so I have included some you can use below, in the Application Template section)
 - Each Application will give you a set of credentials (key and secret), copy and paste these into the default config file (or you can make your own config file which is prolly a better idea anyway)
 
 - Run the python script
