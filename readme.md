@@ -50,8 +50,13 @@ Callback URL: `https://your-site.com/success.html`
 
 ## To Do:
 [x] Export posts (including media contained)
+
 [x] Export tags
+
 [x] Export categories
+
 [x] Export featured media
+
 [ ] Export pages (including media contained)
+
 [ ] Export menus
