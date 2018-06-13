@@ -197,9 +197,12 @@ venv.bak/
 # End of https://www.gitignore.io/api/macos,python,jetbrains
 
 # config files
-/config/*
 /data/*
 !/data/readme
+
+/config/*
 !/config/default-config.py
 !/config/default-keys.py
+
 /cred_store/*
+!/cred_store/readme
