@@ -11,14 +11,14 @@ The package goes through the contents of each post and looks for media content (
 
 I just built this for my own use but I'm happy to keep working on it if people find it useful.. Let me know :)
 
-tldr;
+## tldr;
 - Use the Wordpress REST api to migrate from one Wordpress installation to another.
 - Extracts the posts, pages, comments, tags, media, etc.
 - Reinserts all posts one by one, replacing tags and media etc as needed so that they all have the correct ids.
 
 Remember to disable reCapcha from your sites before attempting the migration
 
-## To Do:
+### To Do:
 - [x] Export posts (including media contained)
 - [x] Export tags
 - [x] Export categories
@@ -28,7 +28,15 @@ Remember to disable reCapcha from your sites before attempting the migration
 - [ ] Make wordpress plugin for automating application setup
 - [ ] Allow post/page exclusions
 
-## Instructions for Host:
+## Requirements
+- 
+
+## Instructions for use
+To use this tool, you should clone the repository onto your local machine
+`https://github.com/robrab2000/WP-REST-Migrator.git`
+
+
+### Instructions for Host:
 - Disable security plugins (including captcha and anything else you think might get in the way)
 - Install plugins:
 - - JSON Basic Authentication (https://github.com/WP-API/Basic-Auth)
@@ -39,7 +47,7 @@ Remember to disable reCapcha from your sites before attempting the migration
 - Set up an Application found under "Users" menu (you can just use the Application template found below))
 - Copy and paste credentials into config file
 
-## Instructions for Receiver:
+### Instructions for Receiver:
 - Create empty wordpress 
 - Check correct ownership and permissions
 - Install plugins:
