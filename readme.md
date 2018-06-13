@@ -7,7 +7,8 @@ The tool was developed out of my frustration with trying to migrate really big w
 
 This project takes a slightly different approach to migration. Instead of packaging up the whole site and migrating it all (the entire database and all the files), it migrates just the content of the wordpress site. Essentially, it uses the Wordpress REST api (thanks to [derwentx](https://github.com/derwentx/wp-api-python) for the excellent python wrapper) to go through each post on the site, extracting the content/metadata and then uploading them to a second wordpress site one by one. 
 
-Not only does this approach work quite well for sites that are too big for traditional migration but it works does a good job of cleaning your site of bloat. Its a bit like dialysis.. A Wordpress database can get clogged up with old crap (mostly from installing and uninstalling plugins/themes), by migrating just the content that you actually NEED to a fresh Wordpress installation, you are left with a clean database and file system. (of course you will need to still set up everything else like themes and plugins again on the new site)
+Not only does this approach work quite well for sites that are too big for traditional migration but it does a good job cleaning your site of bloat. (Its a bit like dialysis..) A Wordpress database can get clogged up with old crap (mostly from installing and uninstalling plugins/themes), by migrating just the content that you actually NEED to a fresh Wordpress installation, you are left with a clean database and file system. 
+*(of course you will need to still set up everything else like themes and plugins again on the new site)*
 
 The package goes through the contents of each post and looks for media content (images), downloading each image and uploading it into the new site so that it gets indexed correctly. 
 
