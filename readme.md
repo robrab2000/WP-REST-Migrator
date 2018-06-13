@@ -14,7 +14,7 @@ I built this for my own use but I'm happy to keep working on it if people find i
 ## tl;dr
 - Use the Wordpress REST api to migrate from one Wordpress installation to another.
 - Extracts the posts, pages, comments, tags, media, etc.
-- Reinserts all posts one by one, replacing tags and media etc as needed so that they all have the correct ids.
+- Re-inserts all posts one by one, replacing tags and media etc as needed so that they all have the correct ids.
 
 Remember to disable reCapcha from your sites before attempting the migration
 
@@ -36,37 +36,28 @@ Remember to disable reCapcha from your sites before attempting the migration
 - * BeautifulSoup4 
 - * wordpress-api (a newer version can be found on their [GitHub page](https://github.com/derwentx/wp-api-python)
 
-## Instructions for use
-To use this tool, you should clone the repository onto your local machine
+## Instructions for Use
+- To use this tool, you should clone the repository onto your local machine
 
-`https://github.com/robrab2000/WP-REST-Migrator.git`
+- `https://github.com/robrab2000/WP-REST-Migrator.git`
 
+- Next you should have two wordpress site set up. One as a host that you will migrate from, the other is the receiver which will be migrated to. (in the config file they will be referred to as WP1 and WP2)
 
-### Instructions for Host:
+- On Each Wordpress installation you will need the following plugins installed:
+- - [WP REST API - Meta Endpoints](https://en-gb.wordpress.org/plugins/rest-api-meta-endpoints/)
+- - [WP REST API - OAuth 1.0a Server] (https://en-gb.wordpress.org/plugins/rest-api-oauth1/)
+- - [WP REST API Controller] (https://en-gb.wordpress.org/plugins/wp-rest-api-controller/)
+- - [JSON Basic Authentication] (https://github.com/WP-API/Basic-Auth) (this needs to be manually installed)
+
+- Check that you have the correct ownership and permissions set for the directory that of the Wordpress installation you are migrating to
 - Disable security plugins (including captcha and anything else you think might get in the way)
-- Install plugins:
-- - JSON Basic Authentication (https://github.com/WP-API/Basic-Auth)
-- - WP REST API - Meta Endpoints
-- - WP REST API - OAuth 1.0a Server
-- - WP REST API Controller
-- Place a `success.html` in wp folder (this file can just contain `<p>Success!</p>`)
-- Set up an Application found under "Users" menu (you can just use the Application template found below))
-- Copy and paste credentials into config file
+- Create a file called `success.html` and put a copy in both wp folders (this file can just contain `<p>Success!</p>`. I have included an example of this in the repo))
+- Set up an Application found under "Users" menu (you can just use the details included in the Application Template found below)
+- Copy and paste credentials into the default config file (or you can make your own config file which is prolly a better idea anyway)
 
-### Instructions for Receiver:
-- Create empty wordpress 
-- Check correct ownership and permissions
-- Install plugins:
-- - JSON Basic Authentication (https://github.com/WP-API/Basic-Auth)
-- - WP REST API - Meta Endpoints
-- - WP REST API - OAuth 1.0a Server
-- - WP REST API Controller
-- Place a `success.html` in wp folder (this file can just contain `<p>Success!</p>`)
-- Set up an Application found under "Users" menu (you can just use the Application template found below))
-- Copy and paste credentials into config file
-- Run
+- Run the python script
 
-## Application template
+## Application Template
 Title: `WP-REST Migrator`
 
 Description: `Wordpress REST Migrator (WRM) Application.
