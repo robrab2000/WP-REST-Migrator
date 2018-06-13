@@ -13,10 +13,12 @@ Remember to disable reCapcha from your sites before attempting the migration
 
 ## Application template
 Title: WP-REST Migrator
+
 Description: Wordpress REST Migrator (WRM) Application.
 WRM is a free and open source tool for Wordpress which helps you to export
 or migrate your Wordpress site using the Wordpress REST API.
-Callback URL: ´https://**your-site.com**/success.html
+
+Callback URL: `https://**your-site.com**/success.html`
 
 
 ## Instructions for Host:
@@ -26,7 +28,7 @@ Callback URL: ´https://**your-site.com**/success.html
 - - WP REST API - Meta Endpoints
 - - WP REST API - OAuth 1.0a Server
 - - WP REST API Controller
-- Place ’success.html’ in wp folder (this file can just contain ´<p>Success!</p>´)
+- Place ’success.html’ in wp folder (this file can just contain `<p>Success!</p>`)
 - Set up an Application (found under Users menu)
 - Copy and paste credentials into config file
 
