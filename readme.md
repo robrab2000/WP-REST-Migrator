@@ -74,7 +74,7 @@ Callback URL: `https://your-site.com/success.html`
 
 ## Notes
 - Some hosting providers (basically most shared hosting environments) block ports for security reasons. This might throw a spanner in your works. In this case you will probably just need to speak with them and get them to allow the wordpress api through their firewall.
-- I've noticed 
+- I've noticed that sometimes your security plugins could get in the way. For example a Capcha on login will probably prevent it from authenticating. I think Wordfence should be alright but I just disabled it for good measure (of course its probably a good idea to re-enable it as soon as possible once you're done).
 
 
 
