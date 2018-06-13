@@ -3,11 +3,18 @@
 WRM is a free and open source (GPLv3) tool for Wordpress which helps you to export
 or migrate your Wordpress site using the Wordpress REST API.
 
-The tool was developed out of frustration trying to migrate really big wordpress sites (>5gb) or cleaning up old and messy wp databases. 
+The tool was developed out of frustration trying to migrate really big wordpress sites (>5gb) and finding that it was tricky to do using migration plugins. Of course one could always just perform a manual migration copying the database and the files but this can be tricky too, especially when the site is a bit bloated. The situation I found myself in was that I had a 13gb wordpress installation (some image optimization plugin had created a huge number of excess copies making my uploads folder over 27,000 files large) and I was struggling to move it. The other issue I wanted to solve was that my database was really messy. We'd set up the site in 2011 and had installed hundres of different plugins and themes over the years. This left me with a simply enormous wp_options table. I attempted to clean up the database but each time I ended up accidentally breaking something.
 
-- REST api export tool for wordpress
-- Extract all posts, pages, comments, tags, media, etc. using REST
-- Reinserts all posts one by one, replacing tags and media etc as needed so that they all have the correct ids
+This project takes a different approach to both migration and cleaning. Instead of packaging up the whole site and migrating it all (the whole database and all the files), this package migrates just the actual content of the wordpress site. Essentially, it uses the Wordpress REST api to go through each post on the site, extracting the content and metadata and uploading them to a second wordpress site one by one. The advantage of this approach is that you only transfer the content (text and media) that you actually NEED, leaving you with a clean database and file system (provided the wordpress you transfer to is a fresh installation of Wordpress).
+
+The package goes through the contents of each post and looks for media content (images), downloading each image and uploading it into the new site so that it gets indexed correctly. 
+
+I just built this for my own use but I'm happy to keep working on it if people find it useful.. Let me know :)
+
+tldr;
+- Use the Wordpress REST api to migrate from one Wordpress installation to another.
+- Extracts the posts, pages, comments, tags, media, etc.
+- Reinserts all posts one by one, replacing tags and media etc as needed so that they all have the correct ids.
 
 Remember to disable reCapcha from your sites before attempting the migration
 
@@ -19,6 +26,7 @@ Remember to disable reCapcha from your sites before attempting the migration
 - [ ] Export pages (including media contained)
 - [ ] Export menus
 - [ ] Make wordpress plugin for automating application setup
+- [ ] Allow post/page exclusions
 
 ## Instructions for Host:
 - Disable security plugins (including captcha and anything else you think might get in the way)
