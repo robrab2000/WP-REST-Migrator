@@ -202,3 +202,4 @@ venv.bak/
 !/config/default-config.py
 !/config/default-keys.py
 /cred_store/*
+data/
