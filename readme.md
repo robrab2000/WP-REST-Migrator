@@ -11,6 +11,14 @@ The tool was developed out of frustration trying to migrate really big wordpress
 
 Remember to disable reCapcha from your sites before attempting the migration
 
+## To Do:
+- [x] Export posts (including media contained)
+- [x] Export tags
+- [x] Export categories
+- [x] Export featured media
+- [ ] Export pages (including media contained)
+- [ ] Export menus
+- [ ] Make wordpress plugin for automating application setup
 
 ## Instructions for Host:
 - Disable security plugins (including captcha and anything else you think might get in the way)
@@ -48,10 +56,4 @@ Callback URL: `https://your-site.com/success.html`
 
 
 
-## To Do:
-- [x] Export posts (including media contained)
-- [x] Export tags
-- [x] Export categories
-- [x] Export featured media
-- [ ] Export pages (including media contained)
-- [ ] Export menus
+
