@@ -206,3 +206,5 @@ venv.bak/
 
 /cred_store/*
 !/cred_store/readme
+
+/wordpress/
