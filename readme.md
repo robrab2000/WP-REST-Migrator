@@ -16,7 +16,7 @@ I just built this for my own use but I'm happy to keep working on it if people f
 - Extracts the posts, pages, comments, tags, media, etc.
 - Reinserts all posts one by one, replacing tags and media etc as needed so that they all have the correct ids.
 
-<nowiki>*</nowiki> Remember to disable reCapcha from your sites before attempting the migration
+Remember to disable reCapcha from your sites before attempting the migration
 
 ### To Do:
 - [x] Export posts (including media contained)
@@ -29,10 +29,13 @@ I just built this for my own use but I'm happy to keep working on it if people f
 - [ ] Allow post/page exclusions
 
 ## Requirements
+- Python 3
+- Two Wordpress installations with ftp/ssh access
 - 
 
 ## Instructions for use
 To use this tool, you should clone the repository onto your local machine
+
 `https://github.com/robrab2000/WP-REST-Migrator.git`
 
 
@@ -69,7 +72,9 @@ or migrate your Wordpress site using the Wordpress REST API.`
 
 Callback URL: `https://your-site.com/success.html`
 
-
+## Notes
+- Some hosting providers (basically most shared hosting environments) block ports for security reasons. This might throw a spanner in your works. In this case you will probably just need to speak with them and get them to allow the wordpress api through their firewall.
+- I've noticed 
 
 
 
