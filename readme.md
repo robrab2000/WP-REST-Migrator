@@ -37,6 +37,9 @@ I built this for my own use but I'm happy to keep working on it if people find i
 - Two Wordpress installations with ftp/ssh access
 - python libraries:
 - * requests
+- * requests_oauthlib
+- * six
+- * argparse
 - * BeautifulSoup4 
 - * wordpress-api (a newer version can be found on their [GitHub page](https://github.com/derwentx/wp-api-python))
 
@@ -49,11 +52,11 @@ I built this for my own use but I'm happy to keep working on it if people find i
 - - [WP REST API - Meta Endpoints](https://en-gb.wordpress.org/plugins/rest-api-meta-endpoints/)
 - - [WP REST API - OAuth 1.0a Server](https://en-gb.wordpress.org/plugins/rest-api-oauth1/)
 - - [WP REST API Controller](https://en-gb.wordpress.org/plugins/wp-rest-api-controller/)
-- - [JSON Basic Authentication](https://github.com/WP-API/Basic-Auth) (this needs to be manually installed)
+- - [JSON Basic Authentication](https://github.com/WP-API/Basic-Auth) (zip needs to be uploaded manually)
 
 - Check that you have the correct ownership and permissions set for the directory that of the Wordpress installation you are migrating to
-- Disable security plugins (including captcha and anything else you think might get in the way)
-- Create a file called `success.html` and put a copy in both wp folders (this file can just contain `<p>Success!</p>`. I have included an example of this in the repo))
+- Disable capcha-on-login plugins as they could stop the api from accessing your sites
+- Create a file called `success.html` and put a copy in both wp folders (this file can be empty)
 - In each Wordpress installation, set up an *"Application"* (found under *"Users"* menu in the backend). They will ask for some details so I have included some you can use below, in the Application Template section)
 - Each Application will give you a set of credentials (key and secret), copy and paste these into the default config file (or you can make your own config file which is prolly a better idea anyway)
 
@@ -68,9 +71,11 @@ or migrate your Wordpress site using the Wordpress REST API.`
 
 Callback URL: `https://your-site.com/success.html`
 
-## Notes
+## Troubleshooting Notes
 - Some hosting providers (basically most shared hosting environments) block ports for security reasons. This might throw a spanner in the works. In this case you will probably just need to speak with them and get them to allow the wordpress api through their firewall.
 - I've noticed that sometimes your security plugins could get in the way. For example a Capcha on login will probably prevent it from authenticating. I think Wordfence should be alright but I just disabled it for good measure (of course its probably a good idea to re-enable it as soon as possible once you're done).
+- This is the first application I've made so if there is anything (specifically in the documentation) that you feel could be better, please don't hesitate to get in touch ;)
+
 
 
 This software is distributed in the hope that it will be useful, but **WITHOUT ANY WARRANTY**; without even the implied warranty of **MERCHANTABILITY** or **FITNESS FOR A PARTICULAR PURPOSE**.  See the GNU General Public License for more details.
