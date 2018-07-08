@@ -30,6 +30,7 @@ I built this for my own use but I'm happy to keep working on it if people find i
 - [ ] Export menus
 - [ ] Make wordpress plugin for automating application setup
 - [ ] Allow post/page exclusions
+- [ ] Command Line setup instructions
 
 ## Requirements
 - Python 3
