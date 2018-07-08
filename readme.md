@@ -17,7 +17,7 @@ I built this for my own use but I'm happy to keep working on it if people find i
 ## tl;dr
 - Use the Wordpress REST api to migrate from one Wordpress installation to another.
 - This package is also great for cleaning up your bloated wordpress.
-- It extracts the content (posts, pages, comments, tags, media, etc.) and re-inserts all it one by one, replacing tags and media etc as needed so that they all have the correct ids.
+- It extracts the content (posts, pages, comments, tags, media, etc.) and re-inserts it all one by one, replacing tags and media etc as needed so that they all have the correct ids.
 
 <no-wiki> * </no-wiki>Remember to disable reCapcha from your sites before attempting the migration
 
